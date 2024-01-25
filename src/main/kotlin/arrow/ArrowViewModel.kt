@@ -29,7 +29,7 @@ class ArrowViewModel {
     }
 
     suspend fun getSportNameByPlayer(playerId: Long) {
-        _viewStateFlow.emitAll(getSportByPlayerIdUseCase.invoke(playerId).map { it.anotherToViewState() })
+       _viewStateFlow.emitAll(getSportByPlayerIdUseCase.invoke(playerId).map { it.anotherToViewState() })
     }
 
     sealed interface ViewState {

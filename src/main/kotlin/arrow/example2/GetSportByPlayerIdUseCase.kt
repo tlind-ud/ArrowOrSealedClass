@@ -13,36 +13,41 @@ class GetSportByPlayerIdUseCase(
     private val getSportUseCase: GetSportUseCase
 ) {
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(playerId: Long): Flow<Either<ArrowOperationState, Sport>> {
-        return either {
-            getPlayerUseCase.invoke(playerId).map { playerResult ->
-                getTeamUseCase.invoke(playerResult.bind().teamId).map { teamResult ->
-                    getSportUseCase.invoke(teamResult.bind().sportId)
-                }.flattenConcat()
-            }.flattenConcat()
-        }.fold(
-            ifLeft = { flowOf(Either.Left(it)) },
-            ifRight = { it }
-        )
+        return getPlayerUseCase.invoke(playerId) chainWith {
+            getTeamUseCase(it.teamId)
+        } chainWith {
+            getSportUseCase(it.sportId)
+        }
     }
 
-    fun invokeAbstracted(playerId: Long): Flow<Either<ArrowOperationState, Sport>> {
-        return getPlayerUseCase.invoke(playerId) chainWith { player ->
-            getTeamUseCase.invoke(player.teamId)
-        } chainWith { team ->
-            getSportUseCase.invoke(team.sportId)
-        }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun invokeWithBoilerplate(playerId: Long): Flow<Either<ArrowOperationState, Sport>> {
+        return getPlayerUseCase.invoke(playerId).map { playerResult ->
+            playerResult.fold(
+                ifLeft = { flowOf(Either.Left(it)) },
+                ifRight = {
+                    getTeamUseCase.invoke(it.teamId).map { teamResult ->
+                        teamResult.fold(
+                            ifLeft = { flowOf(Either.Left(it)) },
+                            ifRight = {
+                                getSportUseCase.invoke(it.sportId)
+                            }
+                        )
+                    }.flattenConcat()
+                }
+            )
+        }.flattenConcat()
     }
 }
 
 inline infix fun <T1, T2> Flow<Either<ArrowOperationState, T1>>.chainWith(
     crossinline otherFlow: (T1) -> Flow<Either<ArrowOperationState, T2>>
 ): Flow<Either<ArrowOperationState, T2>> {
-    return either {
-        this@chainWith.map { otherFlow(it.bind()) }.flattenConcat()
-    }.fold(
-        ifLeft = { flowOf(Either.Left(it)) },
-        ifRight = { it }
-    )
+    return map { result ->
+        result.fold(
+            ifLeft = { flowOf(Either.Left(it)) },
+            ifRight = { otherFlow(it) }
+        )
+    }.flattenConcat()
 }
