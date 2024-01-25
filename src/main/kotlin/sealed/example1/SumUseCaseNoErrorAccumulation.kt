@@ -3,6 +3,7 @@ package sealed.example1
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import sealed.SealedResult
+import sealed.resolve
 
 /**
  * No error accumulation. Just return the first error
@@ -16,14 +17,8 @@ class SumUseCaseNoErrorAccumulation(
         val numberResult2 = getNumberUseCase.invoke()
         val numberResult3 = getNumberUseCase.invoke()
         return combine(numberResult1, numberResult2, numberResult3) { result1, result2, result3 ->
-            when {
-                result1 is NumberError -> result1
-                result2 is NumberError -> result2
-                result3 is NumberError -> result3
-                result1 is SealedResult.Success && result2 is SealedResult.Success && result3 is SealedResult.Success -> {
-                    SealedResult.Success(result1.data + result2.data + result3.data)
-                }
-                else -> SealedResult.Loading
+            SealedResult.resolve(result1, result2, result3) { n1, n2, n3 ->
+                SealedResult.Success(n1 + n2 + n3)
             }
         }
     }
@@ -41,39 +36,36 @@ class SumUseCaseNoErrorAccumulation(
         return shared.combine(numberResult1, numberResult2, numberResult3, numberResult4, numberResult5, numberResult6,
             numberResult7, numberResult8, numberResult9
         ) { result1, result2, result3, result4, result5, result6, result7, result8, result9 ->
-            when {
-                result1 is NumberError -> result1
-                result2 is NumberError -> result2
-                result3 is NumberError -> result3
-                result4 is NumberError -> result4
-                result5 is NumberError -> result5
-                result6 is NumberError -> result6
-                result7 is NumberError -> result7
-                result8 is NumberError -> result8
-                result9 is NumberError -> result9
-                result1 is SealedResult.Success &&
-                        result2 is SealedResult.Success &&
-                        result3 is SealedResult.Success &&
-                        result4 is SealedResult.Success &&
-                        result5 is SealedResult.Success &&
-                        result6 is SealedResult.Success &&
-                        result7 is SealedResult.Success &&
-                        result8 is SealedResult.Success &&
-                        result9 is SealedResult.Success -> {
-                    SealedResult.Success(
-                        result1.data +
-                                result2.data +
-                                result3.data +
-                                result4.data +
-                                result5.data +
-                                result6.data +
-                                result7.data +
-                                result8.data +
-                                result9.data
-                    )
-                }
-                else -> SealedResult.Loading
+
+            val results = arrayOf(result1, result2, result3, result4, result5, result6, result7, result8, result9)
+
+            SealedResult.resolve(*results) {
+                SealedResult.Success(
+                    (it[0].data as Int) +
+                            (it[1].data as Int) +
+                            (it[2].data as Int) +
+                            (it[3].data as Int) +
+                            (it[4].data as Int) +
+                            (it[5].data as Int) +
+                            (it[6].data as Int) +
+                            (it[7].data as Int) +
+                            (it[9].data as Int))
             }
+
+            /*SealedResult.resolveError(*results) ?:
+            SealedResult.resolveLoading(*results) ?:
+            SealedResult.resolveSuccess(*results) {
+                SealedResult.Success(
+                    (it[0].data as Int) +
+                            (it[1].data as Int) +
+                            (it[2].data as Int) +
+                            (it[3].data as Int) +
+                            (it[4].data as Int) +
+                            (it[5].data as Int) +
+                            (it[6].data as Int) +
+                            (it[7].data as Int) +
+                            (it[9].data as Int))
+            } ?: SealedResult.genericError()*/
         }
     }
 }

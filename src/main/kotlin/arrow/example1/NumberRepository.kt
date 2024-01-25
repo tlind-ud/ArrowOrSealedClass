@@ -6,7 +6,6 @@ import arrow.core.raise.either
 import shared.NumberApi
 
 class NumberRepository(private val numberApi: NumberApi) {
-
     suspend fun getNumber(): Either<ArrowOperationState, Int> = either {
         val numberResponse = numberApi.getNumber()
         if (numberResponse.number % 2 == 0) {

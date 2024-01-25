@@ -14,7 +14,10 @@ class SumUseCaseNoErrorAccumulation(private val getNumberUseCase: GetNumberUseCa
         val numberResult3 = getNumberUseCase.invoke()
         return combine(numberResult1, numberResult2, numberResult3) { result1, result2, result3 ->
             either {
-                result1.bind() + result2.bind() + result3.bind()
+                val n1 = result1.bind()
+                val n2 = result2.bind()
+                val n3 = result3.bind()
+                n1 + n2 + n3
             }
         }
     }

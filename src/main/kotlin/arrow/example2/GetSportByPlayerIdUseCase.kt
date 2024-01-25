@@ -3,6 +3,7 @@ package arrow.example2
 import arrow.ArrowOperationState
 import arrow.core.Either
 import arrow.core.raise.either
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import shared.Sport
@@ -41,6 +42,7 @@ class GetSportByPlayerIdUseCase(
     }
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 inline infix fun <T1, T2> Flow<Either<ArrowOperationState, T1>>.chainWith(
     crossinline otherFlow: (T1) -> Flow<Either<ArrowOperationState, T2>>
 ): Flow<Either<ArrowOperationState, T2>> {

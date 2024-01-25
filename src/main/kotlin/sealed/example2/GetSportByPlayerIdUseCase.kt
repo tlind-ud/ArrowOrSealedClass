@@ -1,10 +1,12 @@
 package sealed.example2
 
+import arrow.fx.coroutines.parZip
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.transform
 import sealed.SealedResult
+import sealed.chainWith
 import shared.Player
 import shared.Sport
 import shared.Team
@@ -16,6 +18,14 @@ class GetSportByPlayerIdUseCase(
 ) {
 
     operator fun invoke(playerId: Long): Flow<SealedResult<Sport>> {
+        return getPlayerUseCase(playerId) chainWith {
+            getTeamUseCase(it.teamId)
+        } chainWith {
+            getSportUseCase(it.sportId)
+        }
+    }
+
+    fun invokeWithBoilerplate(playerId: Long): Flow<SealedResult<Sport>> {
         return getPlayerUseCase.invoke(playerId).transform { playerResult ->
             when(playerResult) {
                 is SealedResult.Success<Player> -> {
@@ -37,3 +47,4 @@ class GetSportByPlayerIdUseCase(
         }
     }
 }
+

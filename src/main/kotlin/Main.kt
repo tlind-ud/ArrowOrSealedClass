@@ -14,7 +14,7 @@ class Main {
         @JvmStatic
         fun main(args: Array<String>) {
 
-            val playerId = 1
+            val playerId = 2L
 
             runBlocking {
                 launch {
@@ -36,8 +36,7 @@ class Main {
                         }
                     }
                 }
-
-                arrowViewModel.getSportNameByPlayer(1)
+                arrowViewModel.getSportNameByPlayer(playerId)
             }
         }
     }
